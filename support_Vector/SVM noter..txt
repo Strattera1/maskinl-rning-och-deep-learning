@@ -1,0 +1,5 @@
+SVM noter.
+Applications of Support Vector Machine:
+Why Support Vector Machine?
+past labeled Data -> Model Training -> Prediction -> Output
+It is a Supervised 
