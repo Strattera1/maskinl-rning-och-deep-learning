@@ -1,0 +1,92 @@
+def euclidean_distance (X1,X2):
+    return np.sqrt(np.sum((X1-X2)**2))
+class KMeans:
+    def __init__(self, K = 3, max_iters = 100, plt_steps = False):
+        self.K = K
+        self.max_iters = max_iters
+        self.plt_steps = plt_steps
+        self.clusters = [[] for _ in range(self.K)]
+        self.centroids = []
+        
+        
+    def prediction(self, X):
+        self.X = X
+        self.n_samples, self.n_features = X.shape
+
+        random_sample_idxs = np.random.choice(self.n_samples, self.K, replace=False)
+        self.centroids = [self.X[idx] for idx in random_sample_idxs]
+
+        for _ in range(self.max_iters):
+            self.clusters = self.create_clusters(self.centroids)
+
+            if self.plt_steps:
+                self.plot()
+
+            old_centroids = self.centroids
+            self.centroids = self._get_centroids(self.clusters)
+
+            if self._is_converged(old_centroids, self.centroids):
+                break
+
+            if self.plt_steps:
+                self.plot()
+
+        return self.get_cluster_labels(self.clusters)
+            
+        
+        return self.get_cluster_labels(clusters)
+    def fit (self,X, K, max_iters = 100):
+        
+        centroids = X.values[np.random.choice(X.shape[0], size=K, replace=False)]
+        for _ in range(max_iters):
+            distances = np.linalg.norm(X[:,np.newaxis] - centroids, axis=-1)
+            labels = np.argmin(distances, axis=-1)
+            new_centroids = np.array([X[labels == k].mean(axis=0) for k in range(K)])
+            if np.allclose(centroids, new_centroids):
+                break
+        
+        centroids = new_centroids
+    
+        return labels, centroids
+    
+    def get_cluster_labels(self, clusters):
+        labels = np.empty(self.n_samples)
+        for cluster_idx, cluster in enumerate(clusters):
+            for sample_idx in cluster:
+                labels[sample_idx] = cluster_idx
+        return labels
+            
+    def create_clusters(self, centroids):
+        clusters = [[] for _ in range(self.K)]
+        for idx, sample in enumerate(self.X):
+            centroid_idx = self.closest_centroid(sample, centroids)
+            clusters[centroid_idx].append(idx)
+        return clusters
+    
+    def closest_centroid(self, sample, centroids):
+        distances = [euclidean_distance(sample, point) for point in centroids]
+        closest_idx = np.argmin(distances)
+        return closest_idx
+    
+    def _get_centroids(self, clusters):
+        centroids = np.zeros((self.K, self.n_features))
+        for cluster_idx, cluster in enumerate(clusters):
+            cluster_mean = np.mean(self.X[cluster], axis=0)
+            centroids[cluster_idx] = cluster_mean
+        return centroids
+
+    
+    def _is_converged(self, old_centroids, centroids):
+        distances = [euclidean_distance(old_centroids[i], centroids[i]) for i in range(self.K)]
+        return sum(distances) == 0
+
+    
+    def plot(self):
+        fig, ax = plt.subplots(figsize=(12, 8))
+
+        for i, index in enumerate(self.clusters):
+            point = self.X[index].T
+            ax.scatter(*point, marker="x", color="black", linewidth=2)
+
+        plt.show()
+
